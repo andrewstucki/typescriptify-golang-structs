@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -57,8 +59,8 @@ func New() *TypeScriptify {
 	types[reflect.Uint64] = "number"
 	types[reflect.Float32] = "number"
 	types[reflect.Float64] = "number"
-
 	types[reflect.String] = "string"
+	types[reflect.TypeOf(uuid.UUID{}).Kind()] = "string"
 
 	result.types = types
 

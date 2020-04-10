@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tkrajina/typescriptify-golang-structs/typescriptify"
+import "github.com/andrewstucki/typescriptify-golang-structs/typescriptify"
 
 type Address struct {
 	// Used in html
