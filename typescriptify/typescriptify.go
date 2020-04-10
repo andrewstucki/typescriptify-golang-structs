@@ -360,7 +360,7 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 					if typeScriptChunk != "" {
 						result = typeScriptChunk + "\n" + result
 					}
-					builder.AddArrayOfStructsField(jsonFieldName, field, arrayDepth)
+					builder.AddArrayOfStructsField(t.CreateInterface, jsonFieldName, field, arrayDepth)
 				} else { // Slice of simple fields:
 					err = builder.AddSimpleArrayField(jsonFieldName, field, arrayDepth)
 				}
@@ -496,9 +496,13 @@ func (t *typeScriptClassBuilder) AddStructField(isInterface bool, fieldName stri
 	}
 }
 
-func (t *typeScriptClassBuilder) AddArrayOfStructsField(fieldName string, field reflect.StructField, arrayDepth int) {
+func (t *typeScriptClassBuilder) AddArrayOfStructsField(isInterface bool, fieldName string, field reflect.StructField, arrayDepth int) {
 	fieldType := field.Type.Elem().Name()
 	strippedFieldName := strings.ReplaceAll(fieldName, "?", "")
 	t.fields += fmt.Sprintf("%s%s: %s%s;\n", t.indent, fieldName, t.prefix+fieldType+t.suffix, strings.Repeat("[]", arrayDepth))
-	t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = source[\"%s\"] ? source[\"%s\"].map(function(element: any) { return %s.createFrom(element); }) : null;\n", t.indent, t.indent, strippedFieldName, strippedFieldName, strippedFieldName, t.prefix+fieldType+t.suffix)
+	if isInterface {
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = source[\"%s\"].map(function(element: any) { return create%sFrom(element); });\n", t.indent, t.indent, strippedFieldName, strippedFieldName, t.prefix+fieldType+t.suffix)
+	} else {
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = source[\"%s\"] ? source[\"%s\"].map(function(element: any) { return %s.createFrom(element); }) : null;\n", t.indent, t.indent, strippedFieldName, strippedFieldName, strippedFieldName, t.prefix+fieldType+t.suffix)
+	}
 }

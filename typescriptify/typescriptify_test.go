@@ -577,12 +577,16 @@ type NestedBar struct {
 	Foo  NestedFoo `json:"foo"`
 }
 
+type NestedBaz struct {
+	Bars []NestedBar `json:"bars"`
+}
+
 func TestNestedStructInterface(t *testing.T) {
 	converter := New()
 	converter.CreateInterface = true
 	converter.BackupDir = ""
 
-	converter.Add(NestedBar{})
+	converter.Add(NestedBaz{})
 
 	desiredResult := `
 export interface NestedFoo {
@@ -605,6 +609,16 @@ export function createNestedBarFrom(source: any): NestedBar {
 	result.name = source["name"];
 	result.foo = createNestedFooFrom(source["foo"]);
 	return result as NestedBar;
+}
+
+export interface NestedBaz {
+	bars: NestedBar[];
+}
+export function createNestedBazFrom(source: any): NestedBaz {
+	if ('string' === typeof source) source = JSON.parse(source);
+	const result: any = {};
+	result.bars = source["bars"].map(function(element: any) { return createNestedBarFrom(element); });
+	return result as NestedBaz;
 }`
 	testConverter(t, converter, desiredResult)
 }
