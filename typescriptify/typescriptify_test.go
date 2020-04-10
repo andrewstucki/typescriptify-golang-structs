@@ -567,3 +567,44 @@ export function createTimeTestFrom(source: any): TimeTest {
 }`
 	testConverter(t, converter, desiredResult)
 }
+
+type NestedFoo struct {
+	Name string `json:"name"`
+}
+
+type NestedBar struct {
+	Name string    `json:"name"`
+	Foo  NestedFoo `json:"foo"`
+}
+
+func TestNestedStructInterface(t *testing.T) {
+	converter := New()
+	converter.CreateInterface = true
+	converter.BackupDir = ""
+
+	converter.Add(NestedBar{})
+
+	desiredResult := `
+export interface NestedFoo {
+	name: string;
+}
+export function createNestedFooFrom(source: any): NestedFoo {
+	if ('string' === typeof source) source = JSON.parse(source);
+	const result: any = {};
+	result.name = source["name"];
+	return result as NestedFoo;
+}
+
+export interface NestedBar {
+	name: string;
+	foo: NestedFoo;
+}
+export function createNestedBarFrom(source: any): NestedBar {
+	if ('string' === typeof source) source = JSON.parse(source);
+	const result: any = {};
+	result.name = source["name"];
+	result.foo = createNestedFooFrom(source["foo"]);
+	return result as NestedBar;
+}`
+	testConverter(t, converter, desiredResult)
+}

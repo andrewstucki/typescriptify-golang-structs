@@ -340,7 +340,7 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 				if typeScriptChunk != "" {
 					result = typeScriptChunk + "\n" + result
 				}
-				builder.AddStructField(jsonFieldName, field)
+				builder.AddStructField(t.CreateInterface, jsonFieldName, field)
 			} else if field.Type.Kind() == reflect.Slice { // Slice:
 				if field.Type.Elem().Kind() == reflect.Ptr { //extract ptr type
 					field.Type = field.Type.Elem()
@@ -485,11 +485,15 @@ func (t *typeScriptClassBuilder) AddEnumField(fieldName string, field reflect.St
 	t.fields += fmt.Sprintf("%s%s: %s;\n", t.indent, fieldName, t.prefix+fieldType+t.suffix)
 }
 
-func (t *typeScriptClassBuilder) AddStructField(fieldName string, field reflect.StructField) {
+func (t *typeScriptClassBuilder) AddStructField(isInterface bool, fieldName string, field reflect.StructField) {
 	fieldType := field.Type.Name()
 	strippedFieldName := strings.ReplaceAll(fieldName, "?", "")
 	t.fields += fmt.Sprintf("%s%s: %s;\n", t.indent, fieldName, t.prefix+fieldType+t.suffix)
-	t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = source[\"%s\"] ? %s.createFrom(source[\"%s\"]) : null;\n", t.indent, t.indent, strippedFieldName, strippedFieldName, t.prefix+fieldType+t.suffix, strippedFieldName)
+	if isInterface {
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = create%sFrom(source[\"%s\"]);\n", t.indent, t.indent, strippedFieldName, t.prefix+fieldType+t.suffix, strippedFieldName)
+	} else {
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = source[\"%s\"] ? %s.createFrom(source[\"%s\"]) : null;\n", t.indent, t.indent, strippedFieldName, strippedFieldName, t.prefix+fieldType+t.suffix, strippedFieldName)
+	}
 }
 
 func (t *typeScriptClassBuilder) AddArrayOfStructsField(fieldName string, field reflect.StructField, arrayDepth int) {
