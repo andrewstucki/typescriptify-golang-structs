@@ -26,6 +26,7 @@ import (
 
 func main() {
 	t := typescriptify.New()
+	t.CreateInterface = true
 {{ range $key, $value := .InitParams }}	t.{{ $key }}={{ $value }}
 {{ end }}
 {{ range .Structs }}	t.Add({{ . }}{})
