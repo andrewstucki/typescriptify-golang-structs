@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 type Address struct {
@@ -499,6 +501,49 @@ func TestEnum(t *testing.T) {
 export class Holliday {
 	name: string;
 	weekday: Weekday;
+}`
+	testConverter(t, converter, desiredResult)
+}
+
+type UUIDTest struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func TestUUID(t *testing.T) {
+	converter := New()
+	converter.CreateFromMethod = false
+	converter.BackupDir = ""
+
+	converter.Add(UUIDTest{})
+
+	desiredResult := `
+export class UUIDTest {
+	id: string;
+}`
+	testConverter(t, converter, desiredResult)
+}
+
+type TimeTest struct {
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func TestTime(t *testing.T) {
+	converter := New()
+	converter.BackupDir = ""
+
+	converter.Add(TimeTest{})
+
+	desiredResult := `
+export class TimeTest {
+	createdAt: Date;
+	
+	static createFrom(source: any) {
+		if ('string' === typeof source) source = JSON.parse(source);
+		const result = new TimeTest();
+		result.createdAt = new Date(source["createdAt"]);
+		return result;
+	}
+
 }`
 	testConverter(t, converter, desiredResult)
 }

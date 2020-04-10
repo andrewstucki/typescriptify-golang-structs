@@ -70,6 +70,10 @@ func New() *TypeScriptify {
 	return result
 }
 
+func isDate(t reflect.Type) bool {
+	return t.Name() == "Time" && t.PkgPath() == "time"
+}
+
 func deepFields(typeOf reflect.Type) []reflect.StructField {
 	fields := make([]reflect.StructField, 0)
 
@@ -315,6 +319,7 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 				}
 			}
 		}
+
 		if len(jsonFieldName) > 0 && jsonFieldName != "-" {
 			var err error
 			customTransformation := field.Tag.Get(tsTransformTag)
@@ -325,6 +330,8 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 				builder.AddEnumField(jsonFieldName, field)
 			} else if customTSType != "" { // Struct:
 				err = builder.AddSimpleField(jsonFieldName, field)
+			} else if isDate(field.Type) {
+				err = builder.AddDateField(jsonFieldName, field)
 			} else if field.Type.Kind() == reflect.Struct { // Struct:
 				typeScriptChunk, err := t.convertType(field.Type, customCode)
 				if err != nil {
@@ -357,7 +364,7 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 				} else { // Slice of simple fields:
 					err = builder.AddSimpleArrayField(jsonFieldName, field, arrayDepth)
 				}
-			} else { // Simple field:
+			} else {
 				err = builder.AddSimpleField(jsonFieldName, field)
 			}
 			if err != nil {
@@ -415,6 +422,27 @@ func (t *typeScriptClassBuilder) AddSimpleArrayField(fieldName string, field ref
 	}
 
 	return errors.New(fmt.Sprintf("cannot find type for %s (%s/%s)", kind.String(), fieldName, fieldType))
+}
+
+func (t *typeScriptClassBuilder) AddDateField(fieldName string, field reflect.StructField) error {
+	customTSType := field.Tag.Get(tsType)
+	typeScriptType := "Date"
+	if len(customTSType) > 0 {
+		typeScriptType = customTSType
+	}
+
+	customTransformation := field.Tag.Get(tsTransformTag)
+
+	strippedFieldName := strings.ReplaceAll(fieldName, "?", "")
+	t.fields += fmt.Sprintf("%s%s: %s;\n", t.indent, fieldName, typeScriptType)
+	if customTransformation == "" {
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = new Date(source[\"%s\"]);\n", t.indent, t.indent, strippedFieldName, strippedFieldName)
+	} else {
+		val := fmt.Sprintf(`new Date(source["%s"])`, strippedFieldName)
+		expression := strings.Replace(customTransformation, "__VALUE__", val, -1)
+		t.createFromMethodBody += fmt.Sprintf("%s%sresult.%s = %s;\n", t.indent, t.indent, strippedFieldName, expression)
+	}
+	return nil
 }
 
 func (t *typeScriptClassBuilder) AddSimpleField(fieldName string, field reflect.StructField) error {
