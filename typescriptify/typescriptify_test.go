@@ -561,7 +561,7 @@ export interface TimeTest {
 }
 export function createTimeTestFrom(source: any): TimeTest {
 	if ('string' === typeof source) source = JSON.parse(source);
-	const result = {};
+	const result: any = {};
 	result.createdAt = new Date(source["createdAt"]);
 	return result as TimeTest;
 }`
