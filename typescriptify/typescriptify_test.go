@@ -547,3 +547,20 @@ export class TimeTest {
 }`
 	testConverter(t, converter, desiredResult)
 }
+
+func TestTimeInterface(t *testing.T) {
+	converter := New()
+	converter.CreateInterface = true
+	converter.BackupDir = ""
+
+	converter.Add(TimeTest{})
+
+	desiredResult := `
+export interface TimeTest {
+	createdAt: Date;
+}
+export createTimeTestFrom(source: string): TimeTest {
+	return JSON.parse(source) as TimeTest;
+}`
+	testConverter(t, converter, desiredResult)
+}

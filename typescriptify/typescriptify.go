@@ -392,6 +392,11 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 
 	result += "}"
 
+	if t.CreateInterface && t.CreateFromMethod {
+		result += fmt.Sprintf("\nexport create" + entityName + "From(source: string): " + entityName + " {\n")
+		result += fmt.Sprintf("%sreturn JSON.parse(source) as "+entityName+";\n", t.Indent)
+		result += fmt.Sprintf("}\n")
+	}
 	return result, nil
 }
 
