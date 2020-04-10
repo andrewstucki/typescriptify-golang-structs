@@ -393,8 +393,11 @@ func (t *TypeScriptify) convertType(typeOf reflect.Type, customCode map[string]s
 	result += "}"
 
 	if t.CreateInterface && t.CreateFromMethod {
-		result += fmt.Sprintf("\nexport function create" + entityName + "From(source: string): " + entityName + " {\n")
-		result += fmt.Sprintf("%sreturn JSON.parse(source) as "+entityName+";\n", t.Indent)
+		result += fmt.Sprintf("\nexport function create" + entityName + "From(source: any): " + entityName + " {\n")
+		result += fmt.Sprintf("%sif ('string' === typeof source) source = JSON.parse(source);\n", t.Indent)
+		result += fmt.Sprintf("%sconst result = {};\n", t.Indent)
+		result += strings.ReplaceAll(builder.createFromMethodBody, t.Indent+t.Indent, t.Indent)
+		result += fmt.Sprintf("%sreturn result as %s;\n", t.Indent, entityName)
 		result += fmt.Sprintf("}\n")
 	}
 	return result, nil

@@ -559,8 +559,11 @@ func TestTimeInterface(t *testing.T) {
 export interface TimeTest {
 	createdAt: Date;
 }
-export function createTimeTestFrom(source: string): TimeTest {
-	return JSON.parse(source) as TimeTest;
+export function createTimeTestFrom(source: any): TimeTest {
+	if ('string' === typeof source) source = JSON.parse(source);
+	const result = {};
+	result.createdAt = new Date(source["createdAt"]);
+	return result as TimeTest;
 }`
 	testConverter(t, converter, desiredResult)
 }
