@@ -18,6 +18,7 @@ const TEMPLATE = `package main
 
 import (
 	"fmt"
+	"log"
 
 	"{{ .ModelsPackage }}"
 	"github.com/andrewstucki/typescriptify-golang-structs/typescriptify"
@@ -31,7 +32,7 @@ func main() {
 {{ end }}
 	err := t.ConvertToFile("{{ .TargetFile }}")
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(err)
 	}
 	fmt.Println("OK")
 }`
