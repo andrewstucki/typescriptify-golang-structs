@@ -559,7 +559,7 @@ func TestTimeInterface(t *testing.T) {
 export interface TimeTest {
 	createdAt: Date;
 }
-export createTimeTestFrom(source: string): TimeTest {
+export function createTimeTestFrom(source: string): TimeTest {
 	return JSON.parse(source) as TimeTest;
 }`
 	testConverter(t, converter, desiredResult)
